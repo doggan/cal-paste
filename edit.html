@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CalPaste — New Event</title>
+  <link rel="stylesheet" href="edit.css">
+</head>
+<body>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Parsing date/time with AI...</p>
+  </div>
+
+  <form id="event-form" hidden>
+    <h1>New Event</h1>
+
+    <label for="title">Title</label>
+    <input type="text" id="title" required>
+
+    <label for="start">Start</label>
+    <input type="datetime-local" id="start" required>
+
+    <label for="end">End</label>
+    <input type="datetime-local" id="end" required>
+
+    <label for="location">Location</label>
+    <input type="text" id="location" placeholder="Optional">
+
+    <label for="description">Description</label>
+    <textarea id="description" rows="3" placeholder="Optional"></textarea>
+
+    <label for="calendar">Calendar</label>
+    <select id="calendar">
+      <option value="primary">Primary</option>
+    </select>
+
+    <div class="actions">
+      <button type="button" id="cancel-btn">Cancel</button>
+      <button type="submit" id="save-btn">Add to Calendar</button>
+    </div>
+  </form>
+
+  <div id="result" hidden>
+    <div id="result-icon"></div>
+    <h2 id="result-title"></h2>
+    <p id="result-message"></p>
+    <a id="result-link" href="#" target="_blank" hidden>View in Google Calendar</a>
+    <button id="close-btn">Close</button>
+  </div>
+
+  <script src="edit.js"></script>
+</body>
+</html>

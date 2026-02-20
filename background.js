@@ -17,25 +17,33 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     return;
   }
 
-  try {
-    showNotification("Processing...", `Parsing: "${selectedText.slice(0, 80)}..."`);
+  // Clear any stale data before opening
+  await chrome.storage.session.remove("pendingEvent");
 
+  // Open the edit window immediately (shows loading spinner)
+  const editWindow = await chrome.windows.create({
+    url: "edit.html",
+    type: "popup",
+    width: 440,
+    height: 560,
+  });
+
+  try {
     const parsed = await parseDateTime(selectedText);
     if (!parsed || !parsed.startDateTime) {
+      // Store error so edit.js can display it
+      await chrome.storage.session.set({ pendingEvent: null });
       showNotification("Parse Failed", "Could not extract a date/time from the selected text.");
+      chrome.windows.remove(editWindow.id);
       return;
     }
 
-    const event = await createCalendarEvent(parsed);
-    const eventLink = event.htmlLink || "";
-    showNotification(
-      "Event Created!",
-      `"${parsed.title}" on ${new Date(parsed.startDateTime).toLocaleString()}`,
-      eventLink
-    );
+    // Store parsed event for the edit page to pick up
+    await chrome.storage.session.set({ pendingEvent: parsed });
   } catch (err) {
-    console.error("Calendar Date Picker error:", err);
+    console.error("CalPaste error:", err);
     showNotification("Error", err.message || "Something went wrong.");
+    chrome.windows.remove(editWindow.id);
   }
 });
 
@@ -96,83 +104,13 @@ Rules:
   return JSON.parse(content);
 }
 
-// --- Google Calendar API ---
-
-async function getAuthToken() {
-  return new Promise((resolve, reject) => {
-    chrome.identity.getAuthToken({ interactive: true }, (token) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-      } else {
-        resolve(token);
-      }
-    });
-  });
-}
-
-async function createCalendarEvent(parsed) {
-  const token = await getAuthToken();
-
-  const event = {
-    summary: parsed.title || "Untitled Event",
-    start: {
-      dateTime: parsed.startDateTime,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
-    end: {
-      dateTime: parsed.endDateTime,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
-  };
-
-  if (parsed.location) event.location = parsed.location;
-  if (parsed.description) event.description = parsed.description;
-
-  const response = await fetch(
-    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event),
-    }
-  );
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(`Google Calendar error: ${err.error?.message || response.statusText}`);
-  }
-
-  return response.json();
-}
-
 // --- Notifications ---
 
-function showNotification(title, message, url) {
-  chrome.notifications.create(
-    {
-      type: "basic",
-      iconUrl: "icons/icon128.png",
-      title,
-      message,
-    },
-    (notificationId) => {
-      if (url) {
-        // Store the URL so we can open it if the user clicks the notification
-        chrome.storage.session.set({ [`notif_${notificationId}`]: url });
-      }
-    }
-  );
+function showNotification(title, message) {
+  chrome.notifications.create({
+    type: "basic",
+    iconUrl: "icons/icon128.png",
+    title,
+    message,
+  });
 }
-
-// Open calendar link when notification is clicked
-chrome.notifications.onClicked.addListener(async (notificationId) => {
-  const key = `notif_${notificationId}`;
-  const result = await chrome.storage.session.get(key);
-  if (result[key]) {
-    chrome.tabs.create({ url: result[key] });
-    chrome.storage.session.remove(key);
-  }
-});
