@@ -10,38 +10,30 @@ const descriptionInput = document.getElementById("description");
 const calendarSelect = document.getElementById("calendar");
 const saveBtn = document.getElementById("save-btn");
 
-// Wait for parsed event data from background, then load calendars
-init();
-
-async function init() {
-  try {
-    // The background script may still be parsing — poll until data arrives
-    const pendingEvent = await waitForPendingEvent();
-
-    if (!pendingEvent) {
-      showResult(false, "No Event Data", "Nothing to show. Try highlighting text and right-clicking again.");
-      return;
+// Listen for parsed event data from the background script
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "parsed-event") {
+    if (msg.event) {
+      showForm(msg.event);
+    } else {
+      showResult(false, "Parse Failed", "Could not extract a date/time from the selected text.");
     }
+  } else if (msg.type === "parse-error") {
+    showResult(false, "Error", msg.error);
+  }
+});
 
+async function showForm(event) {
+  try {
     const calendars = await fetchCalendars();
     populateCalendars(calendars);
-    populateForm(pendingEvent);
+    populateForm(event);
 
     loadingEl.hidden = true;
     form.hidden = false;
   } catch (err) {
     showResult(false, "Error", err.message);
   }
-}
-
-async function waitForPendingEvent(timeout = 30000) {
-  const start = Date.now();
-  while (Date.now() - start < timeout) {
-    const { pendingEvent } = await chrome.storage.session.get("pendingEvent");
-    if (pendingEvent !== undefined) return pendingEvent;
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  throw new Error("Timed out waiting for AI to parse the text.");
 }
 
 function populateForm(event) {
@@ -132,7 +124,7 @@ form.addEventListener("submit", async (e) => {
     showResult(true, "Event Created!", `"${created.summary}" has been added to your calendar.`, created.htmlLink);
 
     // Clean up
-    chrome.storage.session.remove("pendingEvent");
+
   } catch (err) {
     saveBtn.disabled = false;
     saveBtn.textContent = "Add to Calendar";

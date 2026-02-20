@@ -17,9 +17,6 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     return;
   }
 
-  // Clear any stale data before opening
-  await chrome.storage.session.remove("pendingEvent");
-
   // Open the edit window immediately (shows loading spinner)
   const editWindow = await chrome.windows.create({
     url: "edit.html",
@@ -30,20 +27,24 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
 
   try {
     const parsed = await parseDateTime(selectedText);
-    if (!parsed || !parsed.startDateTime) {
-      // Store error so edit.js can display it
-      await chrome.storage.session.set({ pendingEvent: null });
-      showNotification("Parse Failed", "Could not extract a date/time from the selected text.");
-      chrome.windows.remove(editWindow.id);
-      return;
-    }
 
-    // Store parsed event for the edit page to pick up
-    await chrome.storage.session.set({ pendingEvent: parsed });
+    // Send result to the edit window
+    const tabs = await chrome.tabs.query({ windowId: editWindow.id });
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        type: "parsed-event",
+        event: parsed?.startDateTime ? parsed : null,
+      });
+    }
   } catch (err) {
     console.error("CalPaste error:", err);
-    showNotification("Error", err.message || "Something went wrong.");
-    chrome.windows.remove(editWindow.id);
+    const tabs = await chrome.tabs.query({ windowId: editWindow.id });
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        type: "parse-error",
+        error: err.message || "Something went wrong.",
+      });
+    }
   }
 });
 
