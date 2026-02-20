@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>CalPaste</h1>
+
+  <section>
+    <label for="openai-key">OpenAI API Key</label>
+    <div class="input-row">
+      <input type="password" id="openai-key" placeholder="sk-...">
+      <button id="save-key">Save</button>
+    </div>
+    <p id="key-status" class="status"></p>
+  </section>
+
+  <section>
+    <label>Google Calendar</label>
+    <button id="google-signin">Sign in with Google</button>
+    <p id="google-status" class="status"></p>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>
