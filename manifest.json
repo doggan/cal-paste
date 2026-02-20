@@ -15,7 +15,7 @@
     "https://api.openai.com/*"
   ],
   "oauth2": {
-    "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "client_id": "882827018074-o8fkivhtpla8938oqejsva0veb8d9cin.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/calendar.events"
     ]
