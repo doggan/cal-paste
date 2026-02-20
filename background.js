@@ -25,7 +25,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     url: "edit.html",
     type: "popup",
     width: 440,
-    height: 560,
+    height: 700,
   });
 
   try {
