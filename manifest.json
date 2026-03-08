@@ -6,6 +6,7 @@
   "permissions": [
     "contextMenus",
     "identity",
+    "identity.email",
     "storage",
     "activeTab",
     "notifications"
