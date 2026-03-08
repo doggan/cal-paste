@@ -10,18 +10,22 @@ const descriptionInput = document.getElementById("description");
 const calendarSelect = document.getElementById("calendar");
 const saveBtn = document.getElementById("save-btn");
 
-// Listen for parsed event data from the background script
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "parsed-event") {
-    if (msg.event) {
-      showForm(msg.event);
+// Poll session storage for parsed event data from the background script
+let polls = 0;
+const poller = setInterval(async () => {
+  const { pendingEvent } = await chrome.storage.session.get("pendingEvent");
+  if (!pendingEvent || (pendingEvent.status === "pending" && ++polls < 60)) return;
+  clearInterval(poller);
+  if (pendingEvent.status === "done") {
+    if (pendingEvent.event) {
+      showForm(pendingEvent.event);
     } else {
       showResult(false, "Parse Failed", "Could not extract a date/time from the selected text.");
     }
-  } else if (msg.type === "parse-error") {
-    showResult(false, "Error", msg.error);
+  } else {
+    showResult(false, "Error", pendingEvent.error || "Something went wrong.");
   }
-});
+}, 500);
 
 async function showForm(event) {
   try {

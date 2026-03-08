@@ -108,6 +108,8 @@ button {
   to { transform: rotate(360deg); }
 }
 
+[hidden] { display: none !important; }
+
 /* Result state */
 #result {
   text-align: center;

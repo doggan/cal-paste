@@ -17,34 +17,24 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     return;
   }
 
-  // Open the edit window immediately (shows loading spinner)
-  const editWindow = await chrome.windows.create({
-    url: "edit.html",
-    type: "popup",
-    width: 440,
-    height: 700,
-  });
+  // Store pending state before opening the window so edit.js can poll for it
+  await chrome.storage.session.set({ pendingEvent: { status: "pending" } });
+
+  chrome.windows.create({ url: "edit.html", type: "popup", width: 440, height: 700 });
 
   try {
     const parsed = await parseDateTime(selectedText);
-
-    // Send result to the edit window
-    const tabs = await chrome.tabs.query({ windowId: editWindow.id });
-    if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, {
-        type: "parsed-event",
+    await chrome.storage.session.set({
+      pendingEvent: {
+        status: "done",
         event: parsed?.startDateTime ? parsed : null,
-      });
-    }
+      },
+    });
   } catch (err) {
     console.error("CalPaste error:", err);
-    const tabs = await chrome.tabs.query({ windowId: editWindow.id });
-    if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, {
-        type: "parse-error",
-        error: err.message || "Something went wrong.",
-      });
-    }
+    await chrome.storage.session.set({
+      pendingEvent: { status: "error", error: err.message || "Something went wrong." },
+    });
   }
 });
 
