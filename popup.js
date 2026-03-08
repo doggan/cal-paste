@@ -38,10 +38,13 @@ saveKeyBtn.addEventListener("click", () => {
 // Google sign-in / sign-out
 googleSigninBtn.addEventListener("click", () => {
   if (currentToken) {
-    chrome.identity.removeCachedAuthToken({ token: currentToken }, () => {
-      currentToken = null;
-      setDisconnected();
-    });
+    fetch(`https://accounts.google.com/o/oauth2/revoke?token=${currentToken}`)
+      .finally(() => {
+        chrome.identity.removeCachedAuthToken({ token: currentToken }, () => {
+          currentToken = null;
+          setDisconnected();
+        });
+      });
   } else {
     chrome.identity.getAuthToken({ interactive: true }, (token) => {
       if (chrome.runtime.lastError) {
