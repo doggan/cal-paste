@@ -13,7 +13,8 @@ zip -r ../cal-paste.zip . \
   --exclude "*.idea*" \
   --exclude ".claude*" \
   --exclude "CLAUDE.md" \
-  --exclude "README.md"
+  --exclude "README.md" \
+  --exclude "CHANGELOG.md"
 
 SIZE=$(du -sh ../cal-paste.zip | cut -f1)
 echo "Built ../cal-paste.zip ($SIZE)"
