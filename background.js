@@ -2,7 +2,7 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "add-to-calendar",
-    title: "Add to Calendar",
+    title: `Add to Calendar - ${chrome.runtime.getManifest().name}`,
     contexts: ["selection"],
   });
 });
