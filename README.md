@@ -24,6 +24,28 @@ Click the CalPaste icon in your toolbar:
 - **OpenAI API Key** — required for date parsing (uses `gpt-4o-mini`)
 - **Google Calendar** — sign in to allow event creation
 
+## Development vs Production
+
+This extension uses two OAuth2 client IDs — one for local dev, one for the published Chrome Web Store version.
+
+### Dev mode (local unpacked)
+
+```bash
+./use-dev.sh          # switches manifest.json to use the dev OAuth client
+```
+
+Then in Chrome:
+1. Go to `chrome://extensions`
+2. Click **Reload** on the CalPaste unpacked extension
+
+### Prod mode (Chrome Web Store)
+
+```bash
+./use-prod.sh         # restores manifest.json to the prod OAuth client
+```
+
+Then zip and upload to the Chrome Web Store. Make sure to run this before committing — `manifest.json` in git should always be the prod version.
+
 ## Stack
 
 - Chrome Extension (Manifest V3)
